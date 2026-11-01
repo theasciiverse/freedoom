@@ -76,7 +76,8 @@ jobs:
           cd ..
           ls -l smoke.log
           grep -a -q "adding freedoom1.wad" smoke.log || { cat -v smoke.log | head -40; exit 1; }
-          [ "$(wc -c <smoke.log)" -gt 100000 ] || { cat -v smoke.log | head -40; exit 1; }
+          # frames were drawn: the half block (U+2580) appears
+          grep -a -q "$(printf '\342\226\200')" smoke.log || { cat -v smoke.log | tail -40; exit 1; }
 
       - name: Package for av
         run: |
