@@ -170,7 +170,17 @@ struct event_buffer_t {
 	unsigned char key;
 };
 
-enum character_set_t { ASCII, BLOCK, BRAILLE };
+enum character_set_t { ASCII, BLOCK, BRAILLE, HALF /* Asciiverse */ };
+
+/* Asciiverse: the half-block picture and the keyboard (src/asciiverse),
+   on Unix terminals */
+#ifndef OS_WINDOWS
+void AV_DrawHalf(const uint32_t *fb, unsigned fw, unsigned fh);
+void AV_InputInit(void);
+void AV_InputShutdown(void);
+void AV_ReadInput(uint32_t now);
+int AV_GetKey(int *pressed, unsigned char *key);
+#endif
 
 static char *output_buffer;
 static size_t output_buffer_size;
@@ -200,6 +210,9 @@ void DG_AtExit(void)
 	if (color_enabled || bold_enabled)
 		(void)fputs("\033[0m", stdout);
 	(void)fputs("\033[?25h\n", stdout);
+#ifndef OS_WINDOWS
+	AV_InputShutdown(); /* Asciiverse */
+#endif
 
 #ifdef OS_WINDOWS
 	DWORD mode;
@@ -259,6 +272,11 @@ void DG_Init(void)
 			character_set = BLOCK;
 		} else if (!strcmp("braille", myargv[i + 1])) {
 			character_set = BRAILLE;
+		} else if (!strcmp("half", myargv[i + 1])) {
+#ifdef OS_WINDOWS
+			I_Error("-chars half is for Unix terminals");
+#endif
+			character_set = HALF; /* Asciiverse */
 		} else {
 			I_Error("Unrecognized argument for -chars: '%s'", myargv[i + 1]);
 		}
@@ -268,7 +286,8 @@ void DG_Init(void)
 	if (i > 0)
 		keypress_smoothing_ms = atoi(myargv[i + 1]);
 
-	if (character_set != ASCII) {
+	/* Asciiverse: the half picture writes its UTF-8 itself */
+	if (character_set != ASCII && character_set != HALF) {
 #ifdef OS_WINDOWS
 		WINDOWS_CALL(!SetConsoleOutputCP(CP_UTF8), "DG_Init: %s");
 #else
@@ -293,6 +312,9 @@ void DG_Init(void)
 	output_buffer = malloc(output_buffer_size);
 
 	CALL(clock_gettime(CLK, &ts_init), "DG_Init: clock_gettime error %d");
+#ifndef OS_WINDOWS
+	AV_InputInit(); /* Asciiverse */
+#endif
 }
 
 void DG_DrawFrame(void)
@@ -303,6 +325,14 @@ void DG_DrawFrame(void)
 		first_frame = false;
 		CALL_STDOUT(fputs("\033[1;1H\033[2J", stdout), "DG_DrawFrame: fputs error %d");
 	}
+
+	/* Asciiverse: the half picture draws itself */
+#ifndef OS_WINDOWS
+	if (character_set == HALF) {
+		AV_DrawHalf(DG_ScreenBuffer, DOOMGENERIC_RESX, DOOMGENERIC_RESY);
+		return;
+	}
+#endif
 
 #ifdef DG_DEMO
 	struct timespec now;
@@ -388,6 +418,8 @@ void DG_DrawFrame(void)
 				} else {
 					BUF_PUTS(buf, "\u28ff\u28ff");
 				}
+				break;
+			case HALF: /* Asciiverse: drawn by AV_DrawHalf */
 				break;
 			}
 
@@ -667,33 +699,11 @@ void DG_ReadInput(void)
 
 	WINDOWS_CALL(!SetConsoleMode(hInputHandle, old_mode), "DG_ReadInput: %s");
 #else /* defined(OS_WINDOWS) */
-	static char raw_input_buffer[INPUT_BUFFER_LEN];
-	struct termios oldt, newt;
-
-	memset(raw_input_buffer, '\0', INPUT_BUFFER_LEN);
-
-	/* Disable canonical mode */
-	CALL(tcgetattr(STDIN_FILENO, &oldt), "DG_DrawFrame: tcgetattr error %d");
-	newt = oldt;
-	newt.c_lflag &= ~(ICANON);
-	newt.c_cc[VMIN] = 0;
-	newt.c_cc[VTIME] = 0;
-	CALL(tcsetattr(STDIN_FILENO, TCSANOW, &newt), "DG_DrawFrame: tcsetattr error %d");
-
-	CALL(read(2, raw_input_buffer, INPUT_BUFFER_LEN - 1U) < 0, "DG_DrawFrame: read error %d");
-
-	CALL(tcsetattr(STDIN_FILENO, TCSANOW, &oldt), "DG_DrawFrame: tcsetattr error %d");
-
-	/* Flush input buffer to prevent read of previous unread input */
-	CALL(tcflush(STDIN_FILENO, TCIFLUSH), "DG_DrawFrame: tcflush error %d");
-
-	/* create input buffer */
-	const char *raw_input_buf_loc = raw_input_buffer;
-	while (*raw_input_buf_loc) {
-		const unsigned char inp = convertToDoomKey(&raw_input_buf_loc);
-		input_buffer[inp] = now;
-		raw_input_buf_loc++;
-	}
+	/* Asciiverse: every waiting key, with exact releases where the
+	   terminal reports them (src/asciiverse/av_input.c) */
+	(void)prev_input_buffer;
+	AV_ReadInput(DG_GetTicksMs());
+	return;
 #endif
 	memset(event_buffer, '\0', sizeof(struct event_buffer_t[EVENT_BUFFER_LEN]));
 	event_buf_loc = event_buffer;
@@ -721,6 +731,9 @@ void DG_ReadInput(void)
 
 int DG_GetKey(int *const pressed, unsigned char *const doomKey)
 {
+#ifndef OS_WINDOWS
+	return AV_GetKey(pressed, doomKey); /* Asciiverse */
+#endif
 	if (!event_buf_loc->key)
 		return 0;
 

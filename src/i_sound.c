@@ -67,6 +67,7 @@ extern sound_module_t sound_sdl_module;
 extern sound_module_t sound_pcsound_module;
 extern music_module_t music_sdl_module;
 extern music_module_t music_opl_module;
+extern sound_module_t sound_av_module;   // Asciiverse: src/asciiverse/av_audio.c
 
 // For OPL module:
 
@@ -95,6 +96,9 @@ static sound_module_t *sound_modules[] =
     &sound_sdl_module,
     &sound_pcsound_module,
 #endif
+#ifdef AV_SOUND
+    &sound_av_module,
+#endif
     NULL,
 };
 
@@ -104,6 +108,9 @@ static music_module_t *music_modules[] =
 {
 #ifdef FEATURE_SOUND
     &music_sdl_module,
+    &music_opl_module,
+#endif
+#ifdef AV_SOUND
     &music_opl_module,
 #endif
     NULL,

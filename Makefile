@@ -77,6 +77,25 @@ SRC = i_main.c dummy.c am_map.c doomdef.c doomstat.c dstrings.c d_event.c d_item
 	sounds.c statdump.c st_lib.c st_stuff.c s_sound.c tables.c v_video.c wi_stuff.c \
 	w_checksum.c w_file.c w_main.c w_wad.c z_zone.c w_file_stdc.c i_input.c i_video.c \
 	doomgeneric.c doomgeneric_ascii.c
+
+# Asciiverse: keyboard input with exact releases, the half-block picture,
+# and sound effects and OPL music through miniaudio, which loads the
+# system's sound library (ALSA, PulseAudio, Core Audio) when the game starts
+# and plays on silently without one; the OPL player, OPL library and MIDI
+# reader are Chocolate Doom 3.1.1's (src/asciiverse/README.md)
+SRC += asciiverse/av_audio.c asciiverse/i_oplmusic.c asciiverse/midifile.c \
+	asciiverse/mus2mid.c asciiverse/opl.c asciiverse/opl_queue.c asciiverse/opl3.c
+CFLAGS += -DAV_SOUND
+ifneq ($(PLATFORM),win32)
+ifneq ($(PLATFORM),win64)
+# the keyboard and the half picture are for Unix terminals
+SRC += asciiverse/av_input.c asciiverse/av_video.c
+LIBS += -lpthread -ldl
+endif
+endif
+$(OBJDIR)/asciiverse/%.o: CFLAGS += -I$(SRCDIR) -I$(SRCDIR)/asciiverse \
+	-include $(SRCDIR)/asciiverse/av_compat.h -Wno-unused-function
+
 OBJS = $(SRC:%.c=$(OBJDIR)/%.o)
 
 OBJSAPP = $(APPDIR)/usr/bin/$(TARGET) $(APPDIR)/AppRun $(APPDIR)/io.github.wojciech_graj.doom_ascii.desktop $(APPDIR)/io.github.wojciech_graj.doom_ascii.png $(APPDIR)/usr/share/metainfo/io.github.wojciech_graj.doom_ascii.appdata.xml
