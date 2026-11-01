@@ -1,11 +1,11 @@
-# Builds doom-ascii, with Freedoom, for the Asciiverse catalog: one archive
-# per target, named doom-ascii-<target>.tar.gz, plus a SHA256SUMS file,
+# Builds Freedoom on the doom-ascii engine for the Asciiverse catalog: one
+# archive per target, named freedoom-<target>.tar.gz, plus a SHA256SUMS file,
 # attached to a GitHub release (hub/catalog/SCHEMA.md,
 # release.source = "github"). Each archive holds the start script, the
-# binary in lib/, Freedoom: Phase 1 and Phase 2, doom-ascii's key settings
+# binary in lib/, Freedoom: Phase 1 and Phase 2, the engine's key settings
 # and the licences (asciiverse/stage.sh).
 #
-# Tags look like v0.3.2-av.1: upstream's version, then our packaging
+# Tags look like v0.3.2-av.1: the engine's version, then our packaging
 # release. Linux builds are glibc, not static musl: miniaudio loads the
 # system's sound library at run time (ALSA or PulseAudio), which a static
 # binary cannot; the binary links only libc and libm, and plays silently
@@ -25,7 +25,7 @@ on:
         required: true
 
 env:
-  ID: doom-ascii
+  ID: freedoom
   TAG: ${{ inputs.tag || github.ref_name }}
 
 permissions:
@@ -108,6 +108,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
-            || gh release create "$TAG" -R "$GITHUB_REPOSITORY" --title "doom-ascii $TAG" \
-                 --notes "doom-ascii ${TAG%%-av.*} by Wojciech Graj, with Freedoom 0.13.0, built for the Asciiverse catalog: exact key releases, a half-block picture, sound effects and music. See PATCHES.md."
+            || gh release create "$TAG" -R "$GITHUB_REPOSITORY" --title "Freedoom $TAG" \
+                 --notes "Freedoom 0.13.0 in the terminal, on the doom-ascii ${TAG%%-av.*} engine by Wojciech Graj, built for the Asciiverse catalog: exact key releases, a half-block picture, sound effects, music and gamepads. See PATCHES.md."
           gh release upload "$TAG" dist/* -R "$GITHUB_REPOSITORY" --clobber

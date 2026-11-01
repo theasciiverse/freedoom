@@ -1,71 +1,52 @@
-# DOOM-ASCII
+# Freedoom in the terminal
 
-![LOGO](screenshots/logo.png)
+Freedoom's two complete games, played in your terminal in full colour, two
+pixels to a character, with music, sound effects and gamepads. Packaged for
+the [Asciiverse](https://asciiverse.sh) catalog.
 
-**Text-based DOOM in your terminal!**
+- **Freedoom: Phase 1**: four episodes
+- **Freedoom: Phase 2**: one long campaign of 32 levels
 
-Source-port of [doomgeneric](https://github.com/ozkl/doomgeneric). Does not have sound.
+## Playing
 
-You will need a WAD file (game data). If you don't own the game, the shareware version is freely available.
+Run `freedoom`. It plays Phase 1; `freedoom -iwad freedoom2.wad` plays
+Phase 2. The bigger the terminal window, the sharper the picture. A terminal
+that reports key releases (Ghostty, kitty, WezTerm, foot) gives exact
+movement and lets Ctrl, Shift and Alt fire, run and strafe.
 
-**Try it out over telnet!**
-```sh
-telnet doom.w-graj.net 666
-```
+- **Arrow keys**: move and turn; **,** and **.**: strafe
+- **Space**: fire; **E**: use doors and switches; **]**: run
+- **1** to **7**: weapons; **Tab**: map; **Esc**: menu
+- Gamepad, on Linux: left stick moves and strafes, right stick turns, **RT**
+  fires, **LT** runs, **A** uses, **LB**/**RB** change weapons, **Back** is the
+  map and **Start** the menu
 
-## Usage
-Binaries for Windows and Linux are provided as [github releases](https://github.com/wojciech-graj/doom-ascii/releases).
+Options: `-skill 1` to `-skill 5`, `-warp E M` (`-warp M` in Phase 2),
+`-nosound`, `-nomusic`, and `-chars ascii|block|braille` for the engine's
+other looks. Settings and saved games are kept in
+`~/.local/share/freedoom`, where `.default.cfg` holds the key bindings.
 
-### Build from Source
-#### Linux / MacOS
-Requires Make and a C compiler. Creates `_<YOUR OS>/game/doom_ascii`
-```sh
-make
-```
+## Building
 
-### Other
-```sh
-make PLATFORM=<|unix|musl|win32|win64> <|zip|appimage|appimage-zip|appimage-release|release|clean|clean-all>
-```
+    sh asciiverse/build.sh && sh asciiverse/freedoom.sh && sh asciiverse/stage.sh
+    stage/freedoom
 
-## Settings
-The following command-line arguments can be supplied:
-- `-nocolor`: Disable color.
-- `-nograd`: Disable text gradients, exclusively use fully filled-in pixels.
-- `-nobold`: Disable bold text.
-- `-chars <ascii|block|braille>`: Use ASCII characters, [unicode block elements](https://en.wikipedia.org/wiki/Block_Elements), or [braille patterns](https://en.wikipedia.org/wiki/Braille_Patterns).
-- `-erase`: Erase previous frame instead of overwriting. May cause a strobe effect.
-- `-fixgamma`: Scale gamma to offset darkening of pixels caused by using a text gradient. Use with caution, as colors become distorted.
-- `-kpsmooth <>`: Set the number of ms a key has to be left depressed for it to count as such. Used to counteract jittery inputs when key repeat delay exceeds frametime.
-- `-scaling <>`: Set resolution. Smaller numbers denote a larger display. A scale of 4 is used by default, and should work flawlessly on all terminals. Most terminals (excluding Windows CMD) should manage with scales up to and including 2.
+## Credits
 
-## Controls
-Default keybindings are listed below.
+- **Engine: [doom-ascii](https://github.com/wojciech-graj/doom-ascii)** by
+  Wojciech Graj, the terminal port this is built on; its own README is
+  [README.upstream.md](README.upstream.md). It is a port of
+  [doomgeneric](https://github.com/ozkl/doomgeneric) (ozkl), from
+  [Chocolate Doom](https://www.chocolate-doom.org) (Simon Howard and
+  contributors), from the engine source id Software released in 1997.
+- **Game data: [Freedoom](https://freedoom.github.io)**, by the Freedoom
+  project (FREEDOOM-CREDITS.txt).
+- **Music**: Chocolate Doom's OPL player with Nuked OPL3 (Alexey
+  Khokholov); sound through [miniaudio](https://miniaud.io).
+- Asciiverse's changes (sound, music, key releases, the half-block picture,
+  gamepads) are listed in [PATCHES.md](PATCHES.md).
 
-|Action         |Default Keybind|
-|---------------|---------------|
-|UP             |ARROW UP		|
-|DOWN			|ARROW DOWN		|
-|LEFT			|ARROW LEFT		|
-|RIGHT			|ARROW RIGHT	|
-|STRAFE LEFT	|,				|
-|STRAFE RIGHT	|.				|
-|FIRE			|SPACE			|
-|USE			|E				|
-|SPEED			|]				|
-|WEAPON SELECT  |1-7            |
+## Licences
 
-Keybinds can be remapped in `.default.cfg`, which should be placed in the same directory as the game executable.
-
-## Performance tips
-### Display
-Most terminals aren't designed for massive throughput, so the game cannot be played at full 320x200 resolution at high frames per second.
-
-Pass the command-line argument `-scaling` to determine the level of scaling (See [Settings](#settings)).
-
-## Troubleshooting
-### Colours are displayed incorrectly
-If the displayed image looks something like [this](https://github.com/wojciech-graj/doom-ascii/issues/8), you are likely using a terminal that does not support 24 bit RGB. See [this](https://github.com/termstandard/colors) for more details, troubleshooting information, and a list of supported terminals.
-
-### Running make throws an error
-Run `make --version` and `cc --version` to verify that you have Make and a C compiler installed. If you do, and you're still getting an error, file a github issue.
+The engine is GPL-2.0-or-later (LICENSE); Freedoom is BSD-3-Clause
+(FREEDOOM-COPYING.txt).

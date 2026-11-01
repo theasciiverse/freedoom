@@ -7,8 +7,10 @@ Freedoom's free game data (BSD-3-Clause) instead of id Software's. `main`
 starts at upstream's `v0.3.2` tag, with upstream's history; the `upstream`
 remote points there.
 
-It is listed under upstream's name, doom-ascii, and plays Freedoom: no id
-Software data is shipped or needed.
+It is listed as **Freedoom**, the game it plays (the command is `freedoom`),
+and credits doom-ascii as its engine; no id Software data is shipped or
+needed. Upstream's README is kept as `README.upstream.md`; `README.md` is
+this edition's.
 
 ## The game
 
@@ -77,10 +79,12 @@ tic, as Chocolate Doom does), `src/g_game.c` (analog sticks) and
 
 ## Packaging (new files)
 
-- `asciiverse/doom-ascii`: the start script. The game keeps `.default.cfg`
+- `asciiverse/freedoom`: the start script, installed as `freedoom` with the
+  binary as `lib/freedoom`. The game keeps `.default.cfg`
   and saved games where it runs, so it runs from
-  `${XDG_DATA_HOME:-~/.local/share}/doom-ascii`, where the script puts
-  doom-ascii's key settings on the first run. It plays
+  `${XDG_DATA_HOME:-~/.local/share}/freedoom` (a `doom-ascii` folder from
+  before the rename is moved there), where the script puts
+  the engine's key settings on the first run. It plays
   Freedoom: Phase 1 with `-chars half -scaling 1` unless told otherwise;
   `-iwad freedoom2.wad` finds Phase 2 beside the script.
 - `asciiverse/freedoom.sh`: fetches Freedoom 0.13.0 and checks it against

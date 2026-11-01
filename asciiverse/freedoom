@@ -1,9 +1,9 @@
 #!/bin/sh
-# Starts doom-ascii from an av install or a release archive.
+# Starts Freedoom from an av install or a release archive.
 #
 # The game keeps its settings (.default.cfg) and saved games in the folder
 # it runs in, so this runs it from a folder of the player's own,
-# ${XDG_DATA_HOME:-~/.local/share}/doom-ascii, and puts doom-ascii's own
+# ${XDG_DATA_HOME:-~/.local/share}/freedoom, and puts the engine's own
 # key settings there on the first run (strafe on , and ., fire on Space,
 # use on E, run on ]).
 #
@@ -11,14 +11,17 @@
 # half-block picture at the game's full resolution (-chars half -scaling 1).
 # "-iwad freedoom2.wad" plays Phase 2; a WAD named without a folder is
 # looked for beside this script first. Every option is the game's own
-# (doom-ascii -help).
+# (freedoom -help).
 #
-# av links ~/.local/bin/doom-ascii to this file, so follow that link first.
+# av links ~/.local/bin/freedoom to this file, so follow that link first.
 set -e
 self=$(readlink "$0" 2>/dev/null || printf '%s' "$0")
 dir=$(cd "$(dirname "$self")" && pwd)
 
-userdir="${XDG_DATA_HOME:-$HOME/.local/share}/doom-ascii"
+data="${XDG_DATA_HOME:-$HOME/.local/share}"
+userdir="$data/freedoom"
+# settings and saves from before the rename
+[ -e "$userdir" ] || [ ! -d "$data/doom-ascii" ] || mv "$data/doom-ascii" "$userdir"
 mkdir -p "$userdir"
 [ -e "$userdir/.default.cfg" ] || cp "$dir/default.cfg" "$userdir/.default.cfg"
 
@@ -41,4 +44,4 @@ done
 [ -n "$scaling" ] || set -- -scaling 1 "$@"
 
 cd "$userdir"
-exec "$dir/lib/doom-ascii" "$@"
+exec "$dir/lib/freedoom" "$@"

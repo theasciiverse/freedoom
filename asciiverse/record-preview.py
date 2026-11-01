@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Records asciiverse/doom-ascii.cast, the catalog preview, at 100x30
+"""Records asciiverse/freedoom.cast, the catalog preview, at 100x30
 (hub/RECORDING.md): the staged game (asciiverse/stage.sh first), started by
 its start script with a scratch HOME, in the half-block picture. It shows
 Freedoom's title and then its own demos, the recorded games Doom plays
@@ -20,7 +20,7 @@ import pyte
 
 COLS, ROWS = 100, 30
 root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-cast = os.path.join(root, "asciiverse", "doom-ascii.cast")
+cast = os.path.join(root, "asciiverse", "freedoom.cast")
 raw = tempfile.mktemp(suffix=".cast")
 home = tempfile.mkdtemp()
 env = dict(os.environ, HOME=home, TERM="xterm-256color", COLORTERM="truecolor",
@@ -35,7 +35,7 @@ if pid == 0:
     os.chdir(os.path.join(root, "stage"))   # the recording shows no local paths
     os.execvpe("asciinema", ["asciinema", "rec", "--overwrite", "-q", "-i", "2",
         "--window-size", f"{COLS}x{ROWS}", "--capture-env", "TERM,COLORTERM,LANG",
-        "-c", "./doom-ascii -nosound", raw], env)
+        "-c", "./freedoom -nosound", raw], env)
 fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack("HHHH", ROWS, COLS, 0, 0))
 
 done = False
