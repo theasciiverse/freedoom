@@ -1,0 +1,112 @@
+# Builds doom-ascii, with Freedoom, for the Asciiverse catalog: one archive
+# per target, named doom-ascii-<target>.tar.gz, plus a SHA256SUMS file,
+# attached to a GitHub release (hub/catalog/SCHEMA.md,
+# release.source = "github"). Each archive holds the start script, the
+# binary in lib/, Freedoom: Phase 1 and Phase 2, doom-ascii's key settings
+# and the licences (asciiverse/stage.sh).
+#
+# Tags look like v0.3.2-av.1: upstream's version, then our packaging
+# release. Linux builds are glibc, not static musl: miniaudio loads the
+# system's sound library at run time (ALSA or PulseAudio), which a static
+# binary cannot; the binary links only libc and libm, and plays silently
+# where no sound library is found. Built on Ubuntu 22.04, so they run on
+# glibc 2.35 and newer. macOS builds natively on a runner of each
+# architecture (Core Audio). No Windows build.
+
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "existing tag to build and release"
+        required: true
+
+env:
+  ID: doom-ascii
+  TAG: ${{ inputs.tag || github.ref_name }}
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-gnu, runner: ubuntu-22.04 }
+          - { target: aarch64-unknown-linux-gnu, runner: ubuntu-22.04-arm }
+          - { target: aarch64-apple-darwin, runner: macos-15 }
+          - { target: x86_64-apple-darwin, runner: macos-15-intel }
+    runs-on: ${{ matrix.runner }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - name: Build
+        run: |
+          sh asciiverse/build.sh
+          file _unix/game/doom-ascii
+          if [ "$RUNNER_OS" = Linux ]; then
+            ldd _unix/game/doom-ascii
+            # libc and libm only: the sound library is loaded at run time
+            ! ldd _unix/game/doom-ascii | grep -v -E 'linux-vdso|libc\.so|libm\.so|ld-linux'
+          else
+            otool -L _unix/game/doom-ascii
+          fi
+
+      - name: Smoke test
+        # runs the game for five seconds in a pseudo-terminal (script),
+        # without sound: Freedoom loads and frames are drawn
+        run: |
+          sh asciiverse/freedoom.sh
+          cmd="perl -e 'alarm 5; exec @ARGV' ../_unix/game/doom-ascii -iwad freedoom1.wad -nosound -chars half -scaling 1"
+          cd freedoom
+          if [ "$RUNNER_OS" = Linux ]; then
+            script -qec "$cmd" /dev/null </dev/null >../smoke.log 2>&1 || true
+          else
+            script -q /dev/null sh -c "$cmd" </dev/null >../smoke.log 2>&1 || true
+          fi
+          cd ..
+          ls -l smoke.log
+          grep -a -q "adding freedoom1.wad" smoke.log || { cat -v smoke.log | head -40; exit 1; }
+          [ "$(wc -c <smoke.log)" -gt 100000 ] || { cat -v smoke.log | head -40; exit 1; }
+
+      - name: Package for av
+        run: |
+          sh asciiverse/stage.sh
+          mkdir -p dist
+          tar -czf "dist/$ID-${{ matrix.target }}.tar.gz" -C stage .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: dist/*
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS && cat SHA256SUMS
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1 \
+            || gh release create "$TAG" -R "$GITHUB_REPOSITORY" --title "doom-ascii $TAG" \
+                 --notes "doom-ascii ${TAG%%-av.*} by Wojciech Graj, with Freedoom 0.13.0, built for the Asciiverse catalog: exact key releases, a half-block picture, sound effects and music. See PATCHES.md."
+          gh release upload "$TAG" dist/* -R "$GITHUB_REPOSITORY" --clobber
