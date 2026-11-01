@@ -36,6 +36,7 @@ rcsid[] = "$Id: i_x.c,v 1.6 1997/02/03 22:45:10 b1 Exp $";
 
 #include "tables.h"
 #include "doomkeys.h"
+#include "i_joystick.h"
 
 #include "doomgeneric.h"
 
@@ -203,6 +204,9 @@ void I_StartFrame (void)
 void I_StartTic (void)
 {
 	I_GetEvent();
+#ifdef AV_GAMEPAD
+	I_UpdateJoystick(); /* Asciiverse: the gamepad */
+#endif
 }
 
 void I_UpdateNoBlit (void)

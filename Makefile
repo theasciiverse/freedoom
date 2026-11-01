@@ -82,14 +82,16 @@ SRC = i_main.c dummy.c am_map.c doomdef.c doomstat.c dstrings.c d_event.c d_item
 # and sound effects and OPL music through miniaudio, which loads the
 # system's sound library (ALSA, PulseAudio, Core Audio) when the game starts
 # and plays on silently without one; the OPL player, OPL library and MIDI
-# reader are Chocolate Doom 3.1.1's (src/asciiverse/README.md)
+# reader are Chocolate Doom 3.1.1's (src/asciiverse/README.md); gamepads,
+# read on Linux from the kernel's event devices
 # All of it on Unix only: upstream's Windows build is left as it was.
 ifneq ($(PLATFORM),win32)
 ifneq ($(PLATFORM),win64)
 SRC += asciiverse/av_input.c asciiverse/av_video.c asciiverse/av_audio.c \
 	asciiverse/i_oplmusic.c asciiverse/midifile.c asciiverse/mus2mid.c \
-	asciiverse/opl.c asciiverse/opl_queue.c asciiverse/opl3.c
-CFLAGS += -DAV_SOUND
+	asciiverse/opl.c asciiverse/opl_queue.c asciiverse/opl3.c \
+	asciiverse/av_pad.c
+CFLAGS += -DAV_SOUND -DAV_GAMEPAD
 LIBS += -lpthread -ldl
 endif
 endif

@@ -58,6 +58,10 @@
 
 #include "m_menu.h"
 
+#ifdef AV_GAMEPAD
+bool AV_PadMenuInput(int now);
+#endif
+
 
 extern patch_t*		hu_font[HU_FONTSIZE];
 extern bool		message_dontfuckwithme;
@@ -641,6 +645,17 @@ void M_SaveSelect(int choice)
     M_StringCopy(saveOldString,savegamestrings[choice], SAVESTRINGSIZE);
     if (!strcmp(savegamestrings[choice], EMPTYSTRING))
 	savegamestrings[choice][0] = 0;
+#ifdef AV_GAMEPAD
+    // Asciiverse: a pad cannot type a name, so a save it starts in an
+    // empty slot is named after the level (asciiverse/av_pad.c)
+    if (!savegamestrings[choice][0] && AV_PadMenuInput(I_GetTimeMS()))
+    {
+        if (gamemode == commercial)
+            M_snprintf(savegamestrings[choice], SAVESTRINGSIZE, "MAP%02d", gamemap);
+        else
+            M_snprintf(savegamestrings[choice], SAVESTRINGSIZE, "E%dM%d", gameepisode, gamemap);
+    }
+#endif
     saveCharIndex = strlen(savegamestrings[choice]);
 }
 

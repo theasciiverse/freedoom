@@ -32,6 +32,12 @@
 #include "m_config.h"
 #include "m_misc.h"
 
+#ifdef AV_GAMEPAD
+#include "i_timer.h"
+void AV_PadInit(void);
+void AV_PadUpdate(int now);
+#endif
+
 // When an axis is within the dead zone, it is set to zero.
 // This is 5% of the full range:
 
@@ -114,6 +120,9 @@ static bool IsValidAxis(int axis)
 
 void I_InitJoystick(void)
 {
+#ifdef AV_GAMEPAD
+    AV_PadInit(); /* Asciiverse: gamepads (asciiverse/av_pad.c) */
+#endif
 #ifdef ORIGCODE
     if (!usejoystick)
     {
@@ -320,6 +329,9 @@ static int GetAxisState(int axis, int invert)
 #endif
 void I_UpdateJoystick(void)
 {
+#ifdef AV_GAMEPAD
+    AV_PadUpdate(I_GetTimeMS());
+#endif
 #ifdef ORIGCODE
     if (joystick != NULL)
     {

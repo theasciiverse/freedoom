@@ -33,6 +33,10 @@
 #include "m_argv.h"
 #include "m_controls.h"
 #include "m_misc.h"
+
+#ifdef AV_GAMEPAD
+int AV_PadTurn(int x, int speed);
+#endif
 #include "m_menu.h"
 #include "m_random.h"
 #include "i_system.h"
@@ -346,6 +350,13 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
          || joybuttons[joybspeed];
  
     forward = side = 0;
+
+#ifdef AV_GAMEPAD
+    // Asciiverse: the pad's sticks are analog (asciiverse/av_pad.c); they
+    // are added below instead of the all-or-nothing joystick moves
+    int av_jx = joyxmove, av_jy = joyymove, av_js = joystrafemove;
+    joyxmove = joyymove = joystrafemove = 0;
+#endif
     
     // use two stage accelerative turning
     // on the keyboard and joystick
@@ -533,6 +544,18 @@ void G_BuildTiccmd (ticcmd_t* cmd, int maketic)
             } 
         } 
     }
+
+#ifdef AV_GAMEPAD
+    if (strafe)
+        side += sidemove[speed] * av_jx / 32767;
+    else
+        cmd->angleturn -= AV_PadTurn(av_jx, speed);
+    forward -= forwardmove[speed] * av_jy / 32767;
+    side += sidemove[speed] * av_js / 32767;
+    joyxmove = av_jx;
+    joyymove = av_jy;
+    joystrafemove = av_js;
+#endif
 
     forward += mousey; 
 

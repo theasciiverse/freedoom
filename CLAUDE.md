@@ -8,9 +8,14 @@ the Asciiverse catalog under upstream's name. Upstream is active
 
 - Ours: exact key releases (kitty keyboard protocol, else inferred),
   the half-block picture (`-chars half`), sound effects and OPL music via
-  miniaudio and Chocolate Doom 3.1.1's OPL code. All in `src/asciiverse/`
+  miniaudio and Chocolate Doom 3.1.1's OPL code, gamepads on Linux
+  (`av_pad.c`, raw evdev). All in `src/asciiverse/`
   (its README.md lists the files and sources), hooked in by small marked
-  edits to `Makefile`, `src/i_sound.c`, `src/doomgeneric_ascii.c`.
+  edits to `Makefile`, `src/i_sound.c`, `src/doomgeneric_ascii.c`, and for
+  the pad `src/i_joystick.c`, `src/i_video.c`, `src/g_game.c`, `src/m_menu.c`.
+- Testing the pad without one: `asciiverse/test-pad.c` makes a virtual
+  Xbox-style pad through `/dev/uinput`, driven by lines on stdin (`b 0x130 1`,
+  `a 0 32767`, `s 200`); run the game with `2>pad.log` to see what it got.
 - Name: listed as doom-ascii (upstream's), never with "Doom" in a title of
   our own; it plays Freedoom, no id data. Decided with David 2026-11-01.
 - `origin` is to be github.com/theasciiverse/doom-ascii. Release: tag
