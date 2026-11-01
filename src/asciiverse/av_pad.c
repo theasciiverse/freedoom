@@ -25,7 +25,7 @@
  * and menu change is logged there.
  *
  * Elsewhere than Linux there is no pad yet: AV_PadInit and AV_PadUpdate do
- * nothing.
+ * nothing (also on Linux when built without its kernel headers).
  *
  * This file is in the public domain.
  */
@@ -62,7 +62,15 @@ int AV_PadTurn(int x, int speed)
     return (int) lround(t);
 }
 
-#ifdef __linux__
+/* Linux, where its kernel headers are installed (a bare musl toolchain has
+   none, and builds without the pad) */
+#if defined(__linux__) && defined(__has_include)
+#if __has_include(<linux/input.h>)
+#define AV_PAD_EVDEV
+#endif
+#endif
+
+#ifdef AV_PAD_EVDEV
 
 #include <dirent.h>
 #include <errno.h>
@@ -499,7 +507,7 @@ bool AV_PadMenuInput(int now)
     return now - menu_choice_at < 250;
 }
 
-#else /* not Linux: no pad yet */
+#else /* not Linux, or no kernel headers: no pad */
 
 void AV_PadInit(void)
 {
