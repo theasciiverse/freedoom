@@ -27,7 +27,8 @@ as Ghostty, kitty, WezTerm, foot and others have):
   it at exit), so movement is exact, and Shift, Ctrl and Alt become keys;
   elsewhere a key counts as held for 550 ms after a fresh press, then for
   100 ms after each repeat. All waiting input is read each frame, and a
-  sequence split between two reads is kept for the next.
+  sequence split between two reads is kept for the next. Upstream's way is
+  still there: passing its `-kpsmooth` option selects it.
 - **The half-block picture** (`-chars half`, `src/asciiverse/av_video.c`):
   each cell shows two pixels, the upper half block in the upper pixel's
   colour on the lower pixel's colour, so pixels are square and in full
@@ -44,11 +45,11 @@ as Ghostty, kitty, WezTerm, foot and others have):
   `AV_AUDIO_DUMP=<file>` also writes the stream to a file (raw 16-bit
   stereo), to check the sound without listening.
 
-The code changes outside `src/asciiverse/`: `Makefile` (the new sources,
-`-DAV_SOUND`, `-lpthread -ldl`; the keyboard and picture only on Unix),
-`src/i_sound.c` (the two modules in its module lists) and
-`src/doomgeneric_ascii.c` (`-chars half`; the Unix input path calls
-`av_input.c`; Windows is unchanged).
+The code changes outside `src/asciiverse/` only add, and only on Unix, so
+upstream's Windows build and its CI are as they were: `Makefile` (the new
+sources, `-DAV_SOUND`, `-lpthread -ldl`), `src/i_sound.c` (the two modules
+in its module lists, under `AV_SOUND`) and `src/doomgeneric_ascii.c`
+(`-chars half`, and the key path switched to `av_input.c` at run time).
 
 ## Packaging (new files)
 

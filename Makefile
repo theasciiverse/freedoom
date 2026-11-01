@@ -83,13 +83,13 @@ SRC = i_main.c dummy.c am_map.c doomdef.c doomstat.c dstrings.c d_event.c d_item
 # system's sound library (ALSA, PulseAudio, Core Audio) when the game starts
 # and plays on silently without one; the OPL player, OPL library and MIDI
 # reader are Chocolate Doom 3.1.1's (src/asciiverse/README.md)
-SRC += asciiverse/av_audio.c asciiverse/i_oplmusic.c asciiverse/midifile.c \
-	asciiverse/mus2mid.c asciiverse/opl.c asciiverse/opl_queue.c asciiverse/opl3.c
-CFLAGS += -DAV_SOUND
+# All of it on Unix only: upstream's Windows build is left as it was.
 ifneq ($(PLATFORM),win32)
 ifneq ($(PLATFORM),win64)
-# the keyboard and the half picture are for Unix terminals
-SRC += asciiverse/av_input.c asciiverse/av_video.c
+SRC += asciiverse/av_input.c asciiverse/av_video.c asciiverse/av_audio.c \
+	asciiverse/i_oplmusic.c asciiverse/midifile.c asciiverse/mus2mid.c \
+	asciiverse/opl.c asciiverse/opl_queue.c asciiverse/opl3.c
+CFLAGS += -DAV_SOUND
 LIBS += -lpthread -ldl
 endif
 endif
