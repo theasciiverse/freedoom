@@ -109,8 +109,10 @@ int mousebstraferight = -1;
 int mousebbackward = -1;
 int mousebuse = -1;
 
-int mousebprevweapon = -1;
-int mousebnextweapon = -1;
+/* Asciiverse: the wheel changes weapon (buttons 3 and 4 are the wheel, up
+   and down, as in Chocolate Doom) */
+int mousebprevweapon = 3;
+int mousebnextweapon = 4;
 
 
 int key_message_refresh = KEY_ENTER;

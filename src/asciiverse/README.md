@@ -5,7 +5,7 @@ at the top of the repository for what it changes and why).
 
 | File | What it is | From | Licence |
 |---|---|---|---|
-| `av_input.c` | Keyboard input on Unix terminals: the kitty keyboard protocol's exact presses and releases, or releases inferred from key repeats | new | public domain |
+| `av_input.c` | Keyboard and mouse input on Unix terminals: the kitty keyboard protocol's exact presses and releases, or releases inferred from key repeats; SGR mouse reports (in pixels where the terminal can) as Doom's mouse | new | public domain |
 | `av_video.c` | The pictures behind `-chars half`, chosen in Options, Picture: half blocks, sextants, Braille, and chafa or libcaca when built with them; fitted to the terminal at 4:3 | new | public domain |
 | `av_pad.c` | Gamepads on Linux from the kernel's event devices: analog sticks in play, the menu's keys in menus | new | public domain |
 | `av_audio.c` | One miniaudio stream: the sound-effect mixer (`sound_av_module`) and the OPL driver for the music (`opl_av_driver`, a port of Chocolate Doom's `opl/opl_sdl.c`) | new, OPL driver from Chocolate Doom | GPL-2.0-or-later |

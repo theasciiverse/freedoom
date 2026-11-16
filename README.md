@@ -1,7 +1,7 @@
 # Freedoom in the terminal
 
 Freedoom's two complete games, played in your terminal in full colour, two
-pixels to a character, with music, sound effects and gamepads. Packaged for
+pixels to a character, with music, sound effects, the mouse and gamepads. Packaged for
 the [Asciiverse](https://asciiverse.sh) catalog.
 
 - **Freedoom: Phase 1**: four episodes
@@ -17,6 +17,12 @@ movement and lets Ctrl, Shift and Alt fire, run and strafe.
 - **Arrow keys**: move and turn; **,** and **.**: strafe
 - **Space**: fire; **E**: use doors and switches; **]**: run
 - **1** to **7**: weapons; **Tab**: map; **Esc**: menu
+- Mouse: move it left and right to turn (across the whole window is once
+  round; Mouse sensitivity in Options sets it), left button fires, right
+  button held strafes, middle button walks forward, a double click of
+  either uses, the wheel changes weapon. In the menu, left chooses, right
+  goes back and the wheel moves up and down. Hold Shift to select text
+  as usual; `-nomouse` leaves the mouse to the terminal
 - Gamepad, on Linux: left stick moves and strafes, right stick turns, **RT**
   fires, **LT** runs, **A** uses, **LB**/**RB** change weapons, **Back** is the
   map and **Start** the menu
@@ -44,7 +50,7 @@ other looks. Settings and saved games are kept in
 - **Music**: Chocolate Doom's OPL player with Nuked OPL3 (Alexey
   Khokholov); sound through [miniaudio](https://miniaud.io).
 - Asciiverse's changes (sound, music, key releases, the half-block picture,
-  gamepads) are listed in [PATCHES.md](PATCHES.md).
+  the mouse, gamepads) are listed in [PATCHES.md](PATCHES.md).
 
 ## Licences
 

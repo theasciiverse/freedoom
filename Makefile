@@ -83,7 +83,7 @@ SRC = i_main.c dummy.c am_map.c doomdef.c doomstat.c dstrings.c d_event.c d_item
 # system's sound library (ALSA, PulseAudio, Core Audio) when the game starts
 # and plays on silently without one; the OPL player, OPL library and MIDI
 # reader are Chocolate Doom 3.1.1's (src/asciiverse/README.md); gamepads,
-# read on Linux from the kernel's event devices
+# read on Linux from the kernel's event devices; the mouse, from the terminal
 # All of it on Unix only: upstream's Windows build is left as it was.
 ifneq ($(PLATFORM),win32)
 ifneq ($(PLATFORM),win64)
@@ -91,7 +91,7 @@ SRC += asciiverse/av_input.c asciiverse/av_video.c asciiverse/av_audio.c \
 	asciiverse/i_oplmusic.c asciiverse/midifile.c asciiverse/mus2mid.c \
 	asciiverse/opl.c asciiverse/opl_queue.c asciiverse/opl3.c \
 	asciiverse/av_pad.c
-CFLAGS += -DAV_SOUND -DAV_GAMEPAD
+CFLAGS += -DAV_SOUND -DAV_GAMEPAD -DAV_MOUSE
 LIBS += -lpthread -ldl
 # chafa and libcaca pictures (Options, Picture) when the libraries are here,
 # never in CI, so released builds need nothing more; AV_CHAFA=0 or AV_CACA=0

@@ -63,6 +63,30 @@ as Ghostty, kitty, WezTerm, foot and others have):
   `src/asciiverse/README.md` lists every file and its source).
   `AV_AUDIO_DUMP=<file>` also writes the stream to a file (raw 16-bit
   stereo), to check the sound without listening.
+- **The mouse** (`src/asciiverse/av_input.c`, `src/i_input.c`). doom-ascii
+  had none: its SDL mouse code was left commented out. The game now asks
+  the terminal to report every mouse movement and button (`CSI ? 1003 h`,
+  in SGR form, `CSI ? 1006 h`, undone at exit; `-nomouse` leaves it off),
+  in pixels where the terminal can (`CSI ? 1016 h`, checked with a DECRQM
+  query; cells otherwise, and the old `CSI M` form is read too). A terminal
+  reports where the pointer is, not how far the mouse moved, so turning is
+  the change in position, scaled so that the whole window's width is one
+  turn round at the default sensitivity (the window's pixel width from
+  `TIOCGWINSZ`, or its columns); a jump of more than a quarter turn in one
+  report is the pointer coming back into the window and is ignored. Up and
+  down are not used (as DOS's `novert`). The buttons are Doom's own: left
+  fires, right strafes, middle walks forward, a double click of either
+  uses. A click shorter than a tic still reaches the game, held for one
+  tic. The wheel is Doom's mouse buttons 3 and 4, now the defaults for
+  `mouseb_prevweapon` and `mouseb_nextweapon` (`src/m_controls.c`; they
+  were -1, off); a config saved before keeps its own. In the menu only the
+  buttons count (left chooses, right goes back) and the wheel sends up and
+  down, so a moving pointer does not move the sliders. `src/g_game.c` now
+  adds mouse movement up across a tic's events instead of keeping only
+  the last, since `BuildNewTic` can read events without building a tic
+  and the next event then overwrote the movement (turning right and back
+  the same distance did not come back to the same angle). With stderr
+  redirected, every mouse report and what went to the game is logged.
 - **Gamepads, on Linux** (`src/asciiverse/av_pad.c`). doom-ascii had no
   joystick: the engine's input for one (`ev_joystick`) was there, but its
   SDL reader is left out of the build. A terminal cannot report a pad, so
@@ -95,7 +119,11 @@ lines, their two settings, under `AV_SOUND`; saving the config, on every
 platform),
 and for the gamepad `src/i_joystick.c` and `src/i_video.c` (reading it each
 tic, as Chocolate Doom does), `src/g_game.c` (analog sticks) and
-`src/m_menu.c` (save names), all under `AV_GAMEPAD`.
+`src/m_menu.c` (save names), all under `AV_GAMEPAD`, and for the mouse
+`src/i_input.c` (passing it to the game, under `AV_MOUSE`). Two small
+changes apply on every platform but only matter with a mouse:
+`src/g_game.c` adds mouse movement up within a tic, and `src/m_controls.c`
+sets the wheel to change weapon.
 
 ## Packaging (new files)
 

@@ -17,6 +17,16 @@
  * All waiting input is read each frame and an escape sequence split
  * between two reads is kept for the next, so no release goes missing.
  *
+ * The mouse (off with -nomouse): the terminal is asked to report every
+ * movement and button (any-event tracking, CSI ? 1003 h, in SGR form,
+ * CSI ? 1006 h), and for positions in pixels rather than cells (CSI ? 1016
+ * h) where it can; a DECRQM query says whether it took. A terminal reports
+ * where the pointer is, not how far the mouse moved, so turning comes from
+ * the change in position: moving the pointer across the whole window turns
+ * once round at the default sensitivity. Buttons are Doom's (left fires,
+ * right strafes, middle walks forward, a double click of either uses), the
+ * wheel changes weapon. Up and down are not used, as with DOS's novert.
+ *
  * This file is in the public domain.
  */
 
@@ -26,10 +36,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
 #include "doomkeys.h"
+#include "m_argv.h"
 
 #define PRE_REPEAT_MS 550
 #define REPEAT_GAP_MS 100
@@ -57,6 +69,20 @@ static size_t pending_len;
 static uint32_t pending_since;
 static struct termios saved;
 static bool have_saved;
+
+/* the mouse */
+static bool mouse_on;           /* tracking asked for */
+static bool mouse_pixels;       /* positions in pixels (1016), not cells */
+static bool mouse_log;          /* stderr is a file: log every report */
+static int mouse_buttons;       /* Doom's bits: 1 left, 2 right, 4 middle */
+static bool mouse_changed;
+static int last_x = -1;
+static double turn_per_unit;    /* Doom mouse units per cell or pixel */
+static double mouse_acc;        /* movement not yet passed on */
+static unsigned wheel_up, wheel_down;
+static int clicked;             /* buttons pressed since last passed on */
+static int wheel_step;          /* 1: a wheel press was sent, release next */
+static bool tic_done;           /* a click went to Doom: the rest next tic */
 
 static void Push(unsigned char key, bool pressed)
 {
@@ -178,6 +204,79 @@ static unsigned char FromFinal(unsigned char c)
     }
 }
 
+/* Doom's mouse units for one turn round at the default sensitivity
+   (angleturn -= units * 8, and 65536 is a full turn) */
+#define UNITS_PER_TURN 8192.0
+/* a jump of more than this share of the window in one report is the
+   pointer coming back in from somewhere else, not a movement */
+#define MAX_JUMP 0.25
+
+static void MouseScale(void)
+{
+    struct winsize ws;
+    unsigned cols = 80, xpix = 0;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0)
+    {
+        if (ws.ws_col > 0)
+            cols = ws.ws_col;
+        xpix = ws.ws_xpixel;
+    }
+    if (mouse_pixels)
+        turn_per_unit = UNITS_PER_TURN / (xpix > 0 ? xpix : cols * 10);
+    else
+        turn_per_unit = UNITS_PER_TURN / cols;
+}
+
+/* an SGR mouse report: button code b at column/pixel x, y */
+static void Mouse(unsigned b, unsigned x, unsigned y, bool release)
+{
+    if (mouse_log)
+        fprintf(stderr, "mouse: b=%u x=%u y=%u %s\n", b, x, y,
+                release ? "release" : "press/move");
+
+    if (b & 64)
+    {
+        /* the wheel: 64 up, 65 down (66, 67 sideways, unused) */
+        if (!release && (b & 3) == 0)
+            wheel_up++;
+        else if (!release && (b & 3) == 1)
+            wheel_down++;
+        return;
+    }
+
+    if (last_x >= 0)
+    {
+        double d = ((double) x - last_x) * turn_per_unit;
+
+        if (d < UNITS_PER_TURN * MAX_JUMP && d > -UNITS_PER_TURN * MAX_JUMP)
+        {
+            mouse_acc += d;
+            if (d != 0)
+                mouse_changed = true;
+        }
+    }
+    last_x = (int) x;
+
+    if (!(b & 32))
+    {
+        /* a button: 0 left, 1 middle, 2 right */
+        static const int bit[4] = { 1, 4, 2, 0 };
+        int m = bit[b & 3];
+
+        if (release)
+        {
+            mouse_buttons &= ~m;
+        }
+        else
+        {
+            mouse_buttons |= m;
+            clicked |= m;
+        }
+        mouse_changed = true;
+    }
+}
+
 /* One key from the start of buf: its length, or 0 when the sequence is not
    complete yet. */
 static size_t ParseOne(const unsigned char *buf, size_t len, uint32_t now,
@@ -213,6 +312,28 @@ static size_t ParseOne(const unsigned char *buf, size_t len, uint32_t now,
         size_t i = 2;
         int kind;
         unsigned char key;
+        unsigned char inter = 0;
+
+        if (mouse_on && len >= 3 && buf[2] == 'M')
+        {
+            /* an old-style mouse report, CSI M b x y, from a terminal
+               without SGR reports */
+            unsigned b = len > 3 ? (unsigned) buf[3] - 32 : 0;
+
+            if (len < 6)
+                return 0;
+            if ((b & 3) == 3 && !(b & 96))
+            {
+                /* a release, which in this form does not say which
+                   button: all of them */
+                mouse_buttons = 0;
+                mouse_changed = true;
+                b = 32;                 /* then just the position */
+            }
+            if (buf[3] >= 32 && buf[4] > 32 && buf[5] > 32)
+                Mouse(b, (unsigned) buf[4] - 32, (unsigned) buf[5] - 32, false);
+            return 6;
+        }
 
         memset(field, 0, sizeof field);
         if (i < len && (buf[i] == '?' || buf[i] == '>' || buf[i] == '<' || buf[i] == '='))
@@ -239,6 +360,10 @@ static size_t ParseOne(const unsigned char *buf, size_t len, uint32_t now,
             {
                 break;
             }
+            else if (c >= 0x20 && c <= 0x2f)
+            {
+                inter = c;              /* an intermediate, as in $ y */
+            }
             else
             {
                 return i + 1;           /* not a key: skip it */
@@ -246,6 +371,28 @@ static size_t ParseOne(const unsigned char *buf, size_t len, uint32_t now,
         }
         if (i >= len)
             return len > 32 ? len : 0;  /* incomplete (or junk) */
+
+        if (buf[2] == '<' && (buf[i] == 'M' || buf[i] == 'm'))
+        {
+            /* an SGR mouse report: CSI < b ; x ; y M (m on release) */
+            if (mouse_on)
+                Mouse(field[0][0], field[1][0], field[2][0], buf[i] == 'm');
+            return i + 1;
+        }
+        if (buf[2] == '?' && inter == '$' && buf[i] == 'y')
+        {
+            /* DECRQM's answer: CSI ? mode ; state $ y, state 1 set */
+            if (field[0][0] == 1016 && field[1][0] == 1)
+            {
+                mouse_pixels = true;
+                last_x = -1;
+                MouseScale();
+            }
+            if (mouse_log && field[0][0] == 1016)
+                fprintf(stderr, "mouse: positions in %s\n",
+                        mouse_pixels ? "pixels" : "cells");
+            return i + 1;
+        }
 
         /* the event type is the modifier field's sub-field: 1 press,
            2 repeat, 3 release; missing means a plain press */
@@ -289,12 +436,23 @@ void AV_InputInit(void)
        and report all keys as escape codes (8); terminals without it
        ignore this */
     fputs("\033[>11u", stdout);
+    /* the mouse: every movement (1003), SGR reports (1006), in pixels
+       where the terminal can (1016), and ask whether it can */
+    mouse_on = M_CheckParm("-nomouse") == 0;
+    mouse_log = !isatty(STDERR_FILENO);
+    if (mouse_on)
+    {
+        fputs("\033[?1003h\033[?1006h\033[?1016h\033[?1016$p", stdout);
+        MouseScale();
+    }
     fflush(stdout);
 }
 
 void AV_InputShutdown(void)
 {
     fputs("\033[<u", stdout);
+    if (mouse_on)
+        fputs("\033[?1016l\033[?1006l\033[?1003l", stdout);
     fflush(stdout);
     if (have_saved)
         tcsetattr(STDIN_FILENO, TCSANOW, &saved);
@@ -305,6 +463,10 @@ void AV_ReadInput(uint32_t now)
     ssize_t n;
     size_t used = 0;
     int k;
+
+    if (mouse_on)
+        MouseScale();               /* the window may have changed size */
+    tic_done = false;
 
     /* everything waiting, kept with what was left over last time */
     for (;;)
@@ -361,5 +523,57 @@ int AV_GetKey(int *pressed, unsigned char *key)
     *pressed = queue[q_head].pressed;
     *key = queue[q_head].key;
     q_head = (q_head + 1) % QUEUE_LEN;
+    return 1;
+}
+
+/* The mouse as Doom events, called after the keys until it returns 0:
+   a wheel click (a press, then its release), then the buttons and the
+   movement since the last call. *dx is in Doom's mouse units. A click
+   whose release has already come is passed on held for one tic, its
+   release in the next, and one wheel click goes a tic, so Doom sees
+   every one. */
+int AV_GetMouse(int *buttons, int *dx)
+{
+    int whole;
+
+    if (!mouse_on || tic_done)
+        return 0;
+    if (wheel_step)
+    {
+        wheel_step = 0;
+        tic_done = true;
+        *buttons = mouse_buttons;
+        *dx = 0;
+        return 1;
+    }
+    if (wheel_up || wheel_down)
+    {
+        /* Doom's mouse buttons 3 and 4 are the wheel, up and down */
+        int bit = wheel_up ? 8 : 16;
+
+        if (wheel_up)
+            wheel_up--;
+        else
+            wheel_down--;
+        wheel_step = 1;
+        if (mouse_log)
+            fprintf(stderr, "mouse: to Doom wheel %s\n", bit == 8 ? "up" : "down");
+        *buttons = mouse_buttons | bit;
+        *dx = 0;
+        return 1;
+    }
+    if (!mouse_changed)
+        return 0;
+    whole = (int) mouse_acc;
+    mouse_acc -= whole;
+    *buttons = mouse_buttons | clicked;
+    if (clicked & ~mouse_buttons)
+        tic_done = true;            /* released already: that comes next tic */
+    else
+        mouse_changed = false;
+    clicked = 0;
+    *dx = whole;
+    if (mouse_log)
+        fprintf(stderr, "mouse: to Doom buttons=%d dx=%d\n", *buttons, *dx);
     return 1;
 }

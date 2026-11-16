@@ -850,8 +850,11 @@ bool G_Responder (event_t* ev)
 		 
       case ev_mouse: 
         SetMouseButtons(ev->data1);
-	mousex = ev->data2*(mouseSensitivity+5)/10; 
-	mousey = ev->data3*(mouseSensitivity+5)/10; 
+	/* Asciiverse: added up, not replaced, so movement in a tic that
+	   builds no ticcmd (or beside a wheel click) is not lost;
+	   G_BuildTiccmd sets them back to 0 */
+	mousex += ev->data2*(mouseSensitivity+5)/10; 
+	mousey += ev->data3*(mouseSensitivity+5)/10; 
 	return true;    // eat events 
  
       case ev_joystick: 

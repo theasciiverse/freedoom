@@ -42,6 +42,10 @@
 
 #include "doomgeneric.h"
 
+#ifdef AV_MOUSE
+int AV_GetMouse(int *buttons, int *dx); /* Asciiverse: asciiverse/av_input.c */
+#endif
+
 int vanilla_keyboard_mapping = 1;
 
 // Is the shift key currently down?
@@ -325,6 +329,36 @@ void I_GetEvent(void)
         }
     }
 
+#ifdef AV_MOUSE
+    /* Asciiverse: the terminal's mouse; up and down are not used. In the
+       menu only the buttons count (left selects, right goes back) and the
+       wheel moves up and down the list, so a moving pointer leaves the
+       sliders alone. */
+    {
+        extern bool menuactive;
+        int buttons, dx;
+
+        while (AV_GetMouse(&buttons, &dx))
+        {
+            if (menuactive && (buttons & (8 | 16)))
+            {
+                event.type = ev_keydown;
+                event.data1 = (buttons & 8) ? KEY_UPARROW : KEY_DOWNARROW;
+                event.data2 = 0;
+                D_PostEvent(&event);
+                event.type = ev_keyup;
+                D_PostEvent(&event);
+                continue;
+            }
+            event.type = ev_mouse;
+            event.data1 = buttons;
+            event.data2 = menuactive ? 0 : dx;
+            event.data3 = 0;
+            event.data4 = 0;
+            D_PostEvent(&event);
+        }
+    }
+#endif
 
                 /*
             case SDL_MOUSEMOTION:
