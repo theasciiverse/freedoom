@@ -32,6 +32,12 @@ int key_up = KEY_UPARROW;
 int key_down = KEY_DOWNARROW; 
 int key_strafeleft = KEY_STRAFE_L;
 int key_straferight = KEY_STRAFE_R;
+// Asciiverse: a second set of movement keys, W S A D, as Chocolate Doom's
+// key_alt_* (the arrows still turn; A and D strafe)
+int key_alt_up = 'w';
+int key_alt_down = 's';
+int key_alt_strafeleft = 'a';
+int key_alt_straferight = 'd';
 int key_fire = KEY_FIRE;
 int key_use = KEY_USE;
 int key_strafe = KEY_RALT;
@@ -209,6 +215,10 @@ void M_BindBaseControls(void)
     M_BindVariable("key_down",           &key_down);
     M_BindVariable("key_strafeleft",     &key_strafeleft);
     M_BindVariable("key_straferight",    &key_straferight);
+    M_BindVariable("key_alt_up",         &key_alt_up);
+    M_BindVariable("key_alt_down",       &key_alt_down);
+    M_BindVariable("key_alt_strafeleft", &key_alt_strafeleft);
+    M_BindVariable("key_alt_straferight", &key_alt_straferight);
     M_BindVariable("key_fire",           &key_fire);
     M_BindVariable("key_use",            &key_use);
     M_BindVariable("key_strafe",         &key_strafe);

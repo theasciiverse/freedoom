@@ -48,6 +48,9 @@ as Ghostty, kitty, WezTerm, foot and others have):
   `av_sound`): the device stops and starts again at once. Saved as off, it
   stops once the game is running, since finding the OPL chip at start
   waits on timers the device drives.
+- **W S A D as well as the arrows** (`src/m_controls.c`, `src/g_game.c`,
+  `src/m_config.c`): a second key for forward, back and strafing, as
+  Chocolate Doom's `key_alt_*`; the arrows still turn. Saved in the config.
 - **Settings are saved again** (`src/m_config.c`): doomgeneric had switched
   off writing the config, so nothing changed in the menus was remembered.
   Chocolate Doom's own code writes it again; keys survive the round trip.

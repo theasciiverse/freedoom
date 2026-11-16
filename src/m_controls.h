@@ -23,6 +23,7 @@ extern int key_left;
 extern int key_up;
 extern int key_down;
 extern int key_strafeleft;
+extern int key_alt_up, key_alt_down, key_alt_strafeleft, key_alt_straferight; // Asciiverse
 extern int key_straferight;
 extern int key_fire;
 extern int key_use;

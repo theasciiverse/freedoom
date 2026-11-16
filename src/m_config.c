@@ -211,6 +211,16 @@ static default_t	doom_defaults_list[] =
     CONFIG_VARIABLE_KEY(key_straferight),
 
     //!
+    // Asciiverse: a second key for moving forward, back and strafing
+    // (W, S, A, D by default)
+    //
+
+    CONFIG_VARIABLE_KEY(key_alt_up),
+    CONFIG_VARIABLE_KEY(key_alt_down),
+    CONFIG_VARIABLE_KEY(key_alt_strafeleft),
+    CONFIG_VARIABLE_KEY(key_alt_straferight),
+
+    //!
     // @game strife
     //
     // Keyboard key to use health.
