@@ -347,7 +347,6 @@ enum
     option_empty2,
     soundvol,
 #ifdef AV_SOUND
-    picture,                // Asciiverse
 #endif
     opt_end
 } options_e;
@@ -356,15 +355,18 @@ menuitem_t OptionsMenu[]=
 {
     {1,"M_ENDGAM",	M_EndGame,'e'},
     {1,"M_MESSG",	M_ChangeMessages,'m'},
+#ifdef AV_SOUND
+    // Asciiverse: in a terminal, "graphic detail" is the picture (half
+    // blocks, sextants, Braille...): left and right choose it
+    {2,"M_DETAIL",	M_ChangePicture,'g'},
+#else
     {1,"M_DETAIL",	M_ChangeDetail,'g'},
+#endif
     {2,"M_SCRNSZ",	M_SizeDisplay,'s'},
     {-1,"",0,'\0'},
     {2,"M_MSENS",	M_ChangeSensitivity,'m'},
     {-1,"",0,'\0'},
-    {1,"M_SVOL",	M_Sound,'s'},
-#ifdef AV_SOUND
-    {2,"",	M_ChangePicture,'p'}   // Asciiverse: drawn in M_DrawOptions
-#endif
+    {1,"M_SVOL",	M_Sound,'s'}
 };
 
 menu_t  OptionsDef =
@@ -1050,7 +1052,9 @@ void M_Episode(int choice)
 //
 // M_Options
 //
+#ifndef AV_SOUND
 static char *detailNames[2] = {"M_GDHIGH","M_GDLOW"};
+#endif
 static char *msgNames[2] = {"M_MSGOFF","M_MSGON"};
 
 void M_DrawOptions(void)
@@ -1058,9 +1062,11 @@ void M_DrawOptions(void)
     V_DrawPatchDirect(108, 15, W_CacheLumpName(DEH_String("M_OPTTTL"),
                                                PU_CACHE));
 	
+#ifndef AV_SOUND
     V_DrawPatchDirect(OptionsDef.x + 175, OptionsDef.y + LINEHEIGHT * detail,
 		      W_CacheLumpName(DEH_String(detailNames[detailLevel]),
 			              PU_CACHE));
+#endif
 
     V_DrawPatchDirect(OptionsDef.x + 120, OptionsDef.y + LINEHEIGHT * messages,
                       W_CacheLumpName(DEH_String(msgNames[showMessages]),
@@ -1080,10 +1086,13 @@ void M_DrawOptions(void)
         extern int av_picture;
         int p = av_picture >= 0 && av_picture < 7 ? av_picture : 0;
 
-        M_WriteText(OptionsDef.x, OptionsDef.y + LINEHEIGHT * picture + 4,
-                    "PICTURE");
-        M_WriteText(OptionsDef.x + 120, OptionsDef.y + LINEHEIGHT * picture + 4,
-                    names[p]);
+        // the value of Graphic Detail: the picture, right of the label,
+        // kept inside the 320-pixel screen
+        int x = OptionsDef.x + 175;
+
+        if (x + M_StringWidth(names[p]) > 316)
+            x = 316 - M_StringWidth(names[p]);
+        M_WriteText(x, OptionsDef.y + LINEHEIGHT * detail + 4, names[p]);
     }
 #endif
 }

@@ -37,8 +37,9 @@ as Ghostty, kitty, WezTerm, foot and others have):
   colour. The 320x200 frame (`-scaling 1`) is fitted to the terminal at
   Doom's 4:3, centred, each pixel the average of the frame's pixels it
   covers, and follows a resized terminal. Only changed cells are sent.
-- **More pictures, chosen in the menu** (Options, Picture; `av_picture` in
-  the config): half blocks, sextants (2x3 sub-pixels a cell in two colours)
+- **More pictures, chosen in the menu** (Options, Graphic Detail, which in a
+  terminal means the picture; left and right choose it; `av_picture` in the
+  config; the old high/low detail is left at high): half blocks, sextants (2x3 sub-pixels a cell in two colours)
   and Braille (2x4 square dots a cell in two colours), and, in builds made
   where libchafa or libcaca is installed (never in CI, so releases need
   nothing more; `AV_CHAFA=0`, `AV_CACA=0` leave them out), chafa's fine,
