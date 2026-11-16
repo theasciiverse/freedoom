@@ -66,6 +66,11 @@ static void SFX_Mix(int32_t *mix, unsigned int frames);
 static int opl_running;
 static FILE *dump;     /* AV_AUDIO_DUMP: a copy of the stream, for tests */
 
+/* Sound on or off (Options, Sound Volume, Sound; av_sound in the config).
+   Off keeps the device open but stopped, so it comes back at once. */
+int av_sound = 1;
+void AV_SetSound(int on);
+
 static void DataCallback(ma_device *dev, void *output, const void *input,
                          ma_uint32 frames)
 {
@@ -139,6 +144,17 @@ static bool StartDevice(void)
         return false;
     }
     return true;
+}
+
+void AV_SetSound(int on)
+{
+    av_sound = on ? 1 : 0;
+    if (device_users == 0)
+        return;
+    if (av_sound)
+        ma_device_start(&device);
+    else
+        ma_device_stop(&device);
 }
 
 static void StopDevice(void)
@@ -295,6 +311,16 @@ static int AV_GetSfxLumpNum(sfxinfo_t *sfx)
 
 static void AV_UpdateSound(void)
 {
+    /* Sound saved as off: stopped once the game is running, not at start,
+       because finding the OPL chip waits on timers the device drives */
+    static bool applied;
+
+    if (!applied)
+    {
+        applied = true;
+        if (!av_sound)
+            AV_SetSound(0);
+    }
 }
 
 /* Doom's volume is 0..127 and separation 0 (left) .. 254 (right) */

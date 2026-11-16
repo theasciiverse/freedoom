@@ -93,6 +93,21 @@ SRC += asciiverse/av_input.c asciiverse/av_video.c asciiverse/av_audio.c \
 	asciiverse/av_pad.c
 CFLAGS += -DAV_SOUND -DAV_GAMEPAD
 LIBS += -lpthread -ldl
+# chafa and libcaca pictures (Options, Picture) when the libraries are here,
+# never in CI, so released builds need nothing more; AV_CHAFA=0 or AV_CACA=0
+# leaves one out
+ifeq ($(CI),)
+AV_CHAFA ?= $(shell pkg-config --exists chafa 2>/dev/null && echo 1)
+AV_CACA ?= $(shell pkg-config --exists caca 2>/dev/null && echo 1)
+endif
+ifeq ($(AV_CHAFA),1)
+CFLAGS += -DAV_HAVE_CHAFA $(shell pkg-config --cflags chafa)
+LIBS += $(shell pkg-config --libs chafa)
+endif
+ifeq ($(AV_CACA),1)
+CFLAGS += -DAV_HAVE_CACA $(shell pkg-config --cflags caca)
+LIBS += $(shell pkg-config --libs caca)
+endif
 endif
 endif
 $(OBJDIR)/asciiverse/%.o: CFLAGS += -I$(SRCDIR) -I$(SRCDIR)/asciiverse \

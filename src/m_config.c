@@ -162,6 +162,19 @@ static default_t	doom_defaults_list[] =
     CONFIG_VARIABLE_INT(show_messages),
 
     //!
+    // Asciiverse: the picture (0 half blocks, 1 sextants, 2 Braille,
+    // 3 to 5 chafa fine, blocks and ASCII, 6 libcaca), Options, Picture.
+    //
+
+    CONFIG_VARIABLE_INT(av_picture),
+
+    //!
+    // Asciiverse: sound on (1) or off (0), Options, Sound Volume, Sound.
+    //
+
+    CONFIG_VARIABLE_INT(av_sound),
+
+    //!
     // Keyboard key to turn right.
     //
 
@@ -1609,7 +1622,9 @@ static const int scantokey[128] =
 
 static void SaveDefaultCollection(default_collection_t *collection)
 {
-#if ORIGCODE
+// Asciiverse: settings are saved again (doomgeneric had switched this off,
+// so nothing set in the menus was remembered)
+#if 1
     default_t *defaults;
     int i, v;
     FILE *f;

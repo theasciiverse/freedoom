@@ -361,6 +361,15 @@ void D_BindVariables(void)
     M_BindVariable("sfx_volume",             &sfxVolume);
     M_BindVariable("music_volume",           &musicVolume);
     M_BindVariable("show_messages",          &showMessages);
+#ifdef AV_SOUND
+    {
+        // Asciiverse: the picture and sound settings (src/asciiverse)
+        extern int av_picture, av_sound;
+
+        M_BindVariable("av_picture",         &av_picture);
+        M_BindVariable("av_sound",           &av_sound);
+    }
+#endif
     M_BindVariable("screenblocks",           &screenblocks);
     M_BindVariable("detaillevel",            &detailLevel);
     M_BindVariable("snd_channels",           &snd_channels);

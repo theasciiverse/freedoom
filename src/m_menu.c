@@ -193,6 +193,10 @@ void M_ChangeSensitivity(int choice);
 void M_SfxVol(int choice);
 void M_MusicVol(int choice);
 void M_ChangeDetail(int choice);
+#ifdef AV_SOUND
+static void M_ChangePicture(int choice);
+static void M_ToggleSound(int choice);
+#endif
 void M_SizeDisplay(int choice);
 void M_StartGame(int choice);
 void M_Sound(int choice);
@@ -342,6 +346,9 @@ enum
     mousesens,
     option_empty2,
     soundvol,
+#ifdef AV_SOUND
+    picture,                // Asciiverse
+#endif
     opt_end
 } options_e;
 
@@ -354,7 +361,10 @@ menuitem_t OptionsMenu[]=
     {-1,"",0,'\0'},
     {2,"M_MSENS",	M_ChangeSensitivity,'m'},
     {-1,"",0,'\0'},
-    {1,"M_SVOL",	M_Sound,'s'}
+    {1,"M_SVOL",	M_Sound,'s'},
+#ifdef AV_SOUND
+    {2,"",	M_ChangePicture,'p'}   // Asciiverse: drawn in M_DrawOptions
+#endif
 };
 
 menu_t  OptionsDef =
@@ -421,6 +431,9 @@ enum
     sfx_empty1,
     music_vol,
     sfx_empty2,
+#ifdef AV_SOUND
+    sound_onoff,            // Asciiverse
+#endif
     sound_end
 } sound_e;
 
@@ -429,7 +442,10 @@ menuitem_t SoundMenu[]=
     {2,"M_SFXVOL",M_SfxVol,'s'},
     {-1,"",0,'\0'},
     {2,"M_MUSVOL",M_MusicVol,'m'},
-    {-1,"",0,'\0'}
+    {-1,"",0,'\0'},
+#ifdef AV_SOUND
+    {1,"",M_ToggleSound,'o'}   // Asciiverse: drawn in M_DrawSound
+#endif
 };
 
 menu_t  SoundDef =
@@ -855,7 +871,45 @@ void M_DrawSound(void)
 
     M_DrawThermo(SoundDef.x,SoundDef.y+LINEHEIGHT*(music_vol+1),
 		 16,musicVolume);
+#ifdef AV_SOUND
+    {
+        extern int av_sound;
+
+        M_WriteText(SoundDef.x, SoundDef.y + LINEHEIGHT * sound_onoff + 4,
+                    "SOUND");
+        M_WriteText(SoundDef.x + 120, SoundDef.y + LINEHEIGHT * sound_onoff + 4,
+                    av_sound ? "ON" : "OFF");
+    }
+#endif
 }
+
+#ifdef AV_SOUND
+// Asciiverse: sound on or off, saved as av_sound (src/asciiverse/av_audio.c)
+static void M_ToggleSound(int choice)
+{
+    extern int av_sound;
+    void AV_SetSound(int on);
+
+    (void) choice;
+    AV_SetSound(!av_sound);
+}
+
+// Asciiverse: the picture, saved as av_picture (src/asciiverse/av_video.c);
+// left and right go through those this build can draw, ours first
+static void M_ChangePicture(int choice)
+{
+    extern int av_picture;
+    unsigned AV_Pictures(void);
+    int i;
+
+    for (i = 0; i < 7; i++)
+    {
+        av_picture = (av_picture + (choice ? 1 : 6)) % 7;
+        if (AV_Pictures() & (1u << av_picture))
+            break;
+    }
+}
+#endif
 
 void M_Sound(int choice)
 {
@@ -1017,6 +1071,21 @@ void M_DrawOptions(void)
 
     M_DrawThermo(OptionsDef.x,OptionsDef.y+LINEHEIGHT*(scrnsize+1),
 		 9,screenSize);
+#ifdef AV_SOUND
+    {
+        static char *names[7] = {
+            "HALF BLOCKS", "SEXTANTS", "BRAILLE", "CHAFA FINE",
+            "CHAFA BLOCKS", "CHAFA ASCII", "CACA"
+        };
+        extern int av_picture;
+        int p = av_picture >= 0 && av_picture < 7 ? av_picture : 0;
+
+        M_WriteText(OptionsDef.x, OptionsDef.y + LINEHEIGHT * picture + 4,
+                    "PICTURE");
+        M_WriteText(OptionsDef.x + 120, OptionsDef.y + LINEHEIGHT * picture + 4,
+                    names[p]);
+    }
+#endif
 }
 
 void M_Options(int choice)

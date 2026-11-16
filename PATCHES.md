@@ -37,6 +37,19 @@ as Ghostty, kitty, WezTerm, foot and others have):
   colour. The 320x200 frame (`-scaling 1`) is fitted to the terminal at
   Doom's 4:3, centred, each pixel the average of the frame's pixels it
   covers, and follows a resized terminal. Only changed cells are sent.
+- **More pictures, chosen in the menu** (Options, Picture; `av_picture` in
+  the config): half blocks, sextants (2x3 sub-pixels a cell in two colours)
+  and Braille (2x4 square dots a cell in two colours), and, in builds made
+  where libchafa or libcaca is installed (never in CI, so releases need
+  nothing more; `AV_CHAFA=0`, `AV_CACA=0` leave them out), chafa's fine,
+  block and ASCII pictures and libcaca's. The picture changes at once.
+- **Sound on or off in the menu** (Options, Sound Volume, Sound;
+  `av_sound`): the device stops and starts again at once. Saved as off, it
+  stops once the game is running, since finding the OPL chip at start
+  waits on timers the device drives.
+- **Settings are saved again** (`src/m_config.c`): doomgeneric had switched
+  off writing the config, so nothing changed in the menus was remembered.
+  Chocolate Doom's own code writes it again; keys survive the round trip.
 - **Sound and music.** doom-ascii had none. Sound effects are mixed from the
   game's sound lumps; music is Doom's MUS played through the GENMIDI
   instruments on an emulated OPL3, as a Sound Blaster would, with Chocolate
@@ -73,6 +86,9 @@ upstream's Windows build and its CI are as they were: `Makefile` (the new
 sources, `-DAV_SOUND`, `-lpthread -ldl`), `src/i_sound.c` (the two modules
 in its module lists, under `AV_SOUND`) and `src/doomgeneric_ascii.c`
 (`-chars half`, and the key path switched to `av_input.c` at run time),
+`src/m_menu.c`, `src/m_config.c` and `src/d_main.c` (the Picture and Sound
+lines, their two settings, under `AV_SOUND`; saving the config, on every
+platform),
 and for the gamepad `src/i_joystick.c` and `src/i_video.c` (reading it each
 tic, as Chocolate Doom does), `src/g_game.c` (analog sticks) and
 `src/m_menu.c` (save names), all under `AV_GAMEPAD`.
