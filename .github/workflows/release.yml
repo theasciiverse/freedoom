@@ -3,7 +3,8 @@
 # attached to a GitHub release (hub/catalog/SCHEMA.md,
 # release.source = "github"). Each archive holds the start script, the
 # binary in lib/, Freedoom: Phase 1 and Phase 2, the engine's key settings
-# and the licences (asciiverse/stage.sh).
+# and the licences (asciiverse/stage.sh). chafa and GLib are linked in from
+# their static archives for the chafa picture.
 #
 # Tags look like v0.3.2-av.1: the engine's version, then our packaging
 # release. Linux builds are glibc, not static musl: miniaudio loads the
@@ -49,14 +50,25 @@ jobs:
         with:
           ref: ${{ env.TAG }}
 
+      - name: Libraries for the chafa picture
+        # static archives, linked into the binary (asciiverse/build.sh)
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then
+            sudo apt-get update
+            sudo apt-get install -y libchafa-dev libglib2.0-dev libpcre2-dev
+          else
+            brew install chafa pkgconf
+          fi
+
       - name: Build
         run: |
           sh asciiverse/build.sh
           file _unix/game/doom-ascii
           if [ "$RUNNER_OS" = Linux ]; then
             ldd _unix/game/doom-ascii
-            # libc and libm only: the sound library is loaded at run time
-            ! ldd _unix/game/doom-ascii | grep -v -E 'linux-vdso|libc\.so|libm\.so|ld-linux'
+            # libc and libm only (libmvec is glibc's vector maths): the
+            # sound library is loaded at run time, chafa is linked in
+            ! ldd _unix/game/doom-ascii | grep -v -E 'linux-vdso|libc\.so|libm\.so|libmvec\.so|ld-linux'
           else
             otool -L _unix/game/doom-ascii
           fi
@@ -78,6 +90,21 @@ jobs:
           grep -a -q "adding freedoom1.wad" smoke.log || { cat -v smoke.log | head -40; exit 1; }
           # frames were drawn: the half block (U+2580) appears
           grep -a -q "$(printf '\342\226\200')" smoke.log || { cat -v smoke.log | tail -40; exit 1; }
+          # the chafa picture (av_picture 3): its glyphs go beyond the half
+          # block (other block elements, sextants); Linux always has it,
+          # macOS when Homebrew had static archives (asciiverse/build.sh)
+          if [ "$RUNNER_OS" = Linux ] || [ -e _unix/with-chafa ]; then
+            cp src/.default.cfg chafa.cfg && echo 'av_picture 3' >> chafa.cfg
+            cmd="perl -e 'alarm 5; exec @ARGV' ../_unix/game/doom-ascii -iwad freedoom1.wad -nosound -chars half -scaling 1 -config ../chafa.cfg"
+            cd freedoom
+            if [ "$RUNNER_OS" = Linux ]; then
+              script -qec "$cmd" /dev/null </dev/null >../smoke-chafa.log 2>&1 || true
+            else
+              script -q /dev/null sh -c "$cmd" </dev/null >../smoke-chafa.log 2>&1 || true
+            fi
+            cd ..
+            perl -CSD -0777 -ne 'exit(/[\x{2581}-\x{259F}\x{1FB00}-\x{1FB3B}]/ ? 0 : 1)' smoke-chafa.log || { cat -v smoke-chafa.log | tail -20; exit 1; }
+          fi
 
       - name: Package for av
         run: |

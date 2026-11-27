@@ -8,7 +8,9 @@ the Asciiverse catalog as **Freedoom**. Upstream is active
 
 - Ours: exact key releases (kitty keyboard protocol, else inferred), the
   mouse (SGR reports, pixels via 1016 where offered; `-nomouse`),
-  the half-block picture (`-chars half`), sound effects and OPL music via
+  the half-block picture (`-chars half`) and the other pictures, chafa's
+  linked in statically in releases (`AV_CHAFA_STATIC=1`; the release is
+  then GPL-3.0-or-later, notices in `asciiverse/licenses/`), sound effects and OPL music via
   miniaudio and Chocolate Doom 3.1.1's OPL code, gamepads on Linux
   (`av_pad.c`, raw evdev). All in `src/asciiverse/`
   (its README.md lists the files and sources), hooked in by small marked

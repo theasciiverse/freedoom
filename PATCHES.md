@@ -40,10 +40,18 @@ as Ghostty, kitty, WezTerm, foot and others have):
 - **More pictures, chosen in the menu** (Options, Graphic Detail, which in a
   terminal means the picture; left and right choose it; `av_picture` in the
   config; the old high/low detail is left at high): half blocks, sextants (2x3 sub-pixels a cell in two colours)
-  and Braille (2x4 square dots a cell in two colours), and, in builds made
-  where libchafa or libcaca is installed (never in CI, so releases need
-  nothing more; `AV_CHAFA=0`, `AV_CACA=0` leave them out), chafa's fine,
-  block and ASCII pictures and libcaca's. The picture changes at once.
+  and Braille (2x4 square dots a cell in two colours), chafa's fine, block
+  and ASCII pictures, and libcaca's in local builds where it is installed.
+  The picture changes at once.
+- **chafa linked in** (`AV_CHAFA_STATIC=1`, `asciiverse/static-libs.sh`):
+  release builds take chafa and the GLib under it from their static
+  archives, so the chafa pictures need nothing on the player's machine.
+  Always on Linux (Ubuntu's `libchafa-dev`, `libglib2.0-dev`); on macOS
+  when Homebrew's packages have the archives, else that build goes without
+  them and its log says so. `AV_CHAFA=0` and `AV_CACA=0` leave either out
+  of a local build. With chafa (LGPL-3.0-or-later) linked in, the released
+  game as a whole is GPL-3.0-or-later; the licences and notices ship in
+  `licenses/`.
 - **Sound on or off in the menu** (Options, Sound Volume, Sound;
   `av_sound`): the device stops and starts again at once. Saved as off, it
   stops once the game is running, since finding the OPL chip at start

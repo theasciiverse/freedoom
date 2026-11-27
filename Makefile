@@ -94,15 +94,25 @@ SRC += asciiverse/av_input.c asciiverse/av_video.c asciiverse/av_audio.c \
 CFLAGS += -DAV_SOUND -DAV_GAMEPAD -DAV_MOUSE
 LIBS += -lpthread -ldl
 # chafa and libcaca pictures (Options, Picture) when the libraries are here,
-# never in CI, so released builds need nothing more; AV_CHAFA=0 or AV_CACA=0
-# leaves one out
+# not by default in CI; AV_CHAFA=0 or AV_CACA=0 leaves one out.
+# AV_CHAFA_STATIC=1 (what the release builds use) links chafa and the GLib
+# under it from their static archives, so the game needs nothing more on
+# the player's machine (asciiverse/static-libs.sh)
 ifeq ($(CI),)
 AV_CHAFA ?= $(shell pkg-config --exists chafa 2>/dev/null && echo 1)
 AV_CACA ?= $(shell pkg-config --exists caca 2>/dev/null && echo 1)
 endif
 ifeq ($(AV_CHAFA),1)
 CFLAGS += -DAV_HAVE_CHAFA $(shell pkg-config --cflags chafa)
+ifeq ($(AV_CHAFA_STATIC),1)
+AV_CHAFA_LIBS := $(shell CC="$(CC)" sh $(SRCDIR)/../asciiverse/static-libs.sh chafa)
+ifeq ($(AV_CHAFA_LIBS),)
+$(error AV_CHAFA_STATIC=1: no static chafa, see asciiverse/static-libs.sh)
+endif
+LIBS += $(AV_CHAFA_LIBS)
+else
 LIBS += $(shell pkg-config --libs chafa)
+endif
 endif
 ifeq ($(AV_CACA),1)
 CFLAGS += -DAV_HAVE_CACA $(shell pkg-config --cflags caca)

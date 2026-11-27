@@ -49,10 +49,16 @@ other looks. Settings and saved games are kept in
   project (FREEDOOM-CREDITS.txt).
 - **Music**: Chocolate Doom's OPL player with Nuked OPL3 (Alexey
   Khokholov); sound through [miniaudio](https://miniaud.io).
-- Asciiverse's changes (sound, music, key releases, the half-block picture,
-  the mouse, gamepads) are listed in [PATCHES.md](PATCHES.md).
+- **chafa pictures**: [chafa](https://hpjansson.org/chafa/) by Hans Petter
+  Jansson, on [GLib](https://gitlab.gnome.org/GNOME/glib); notices in
+  `licenses/THIRD-PARTY-NOTICES.md`.
+- Asciiverse's changes (sound, music, key releases, the pictures, the
+  mouse, gamepads) are listed in [PATCHES.md](PATCHES.md).
 
 ## Licences
 
 The engine is GPL-2.0-or-later (LICENSE); Freedoom is BSD-3-Clause
-(FREEDOOM-COPYING.txt).
+(FREEDOOM-COPYING.txt). The released game links in chafa
+(LGPL-3.0-or-later) and GLib (LGPL-2.1-or-later), so as a whole it is
+distributed under GPL-3.0-or-later (`licenses/GPL-3.0.txt`); the other
+licences and notices are in `licenses/`.

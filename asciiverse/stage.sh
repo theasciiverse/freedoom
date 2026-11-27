@@ -13,3 +13,5 @@ cp freedoom/freedoom1.wad freedoom/freedoom2.wad stage/
 cp freedoom/COPYING.txt stage/FREEDOOM-COPYING.txt
 cp freedoom/CREDITS.txt stage/FREEDOOM-CREDITS.txt
 cp README.md README.upstream.md LICENSE PATCHES.md stage/
+mkdir -p stage/licenses
+cp asciiverse/licenses/* stage/licenses/
